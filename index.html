@@ -1,0 +1,1807 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Суперпостинг - Умный SMM инструмент</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #1a1a2e;
+            --bg-card: #16213e;
+            --accent: #e94560;
+            --accent-hover: #ff4666;
+            --text-primary: #ffffff;
+            --text-secondary: #a8a8b3;
+            --border: #2a2a3e;
+            --success: #4ade80;
+            --warning: #fbbf24;
+            --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 300px; /* Increased width */
+            background: var(--bg-secondary);
+            padding: 30px 20px;
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+            display: flex; /* Added for user-profile alignment */
+            flex-direction: column; /* Added for user-profile alignment */
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 800;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 40px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo::before {
+            content: "🚀";
+            font-size: 32px;
+            -webkit-text-fill-color: initial;
+        }
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-item {
+            margin-bottom: 10px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 20px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-link:hover {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            transform: translateX(5px);
+        }
+
+        .nav-link.active {
+            background: var(--gradient);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .nav-icon {
+            font-size: 20px;
+        }
+
+        .user-profile {
+            margin-top: auto;
+            padding-top: 30px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 15px;
+            background: var(--gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 20px;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 15px 20px;
+            overflow-y: auto;
+            background: var(--bg-primary);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .page-title {
+            font-size: 26px;
+            font-weight: 700;
+        }
+
+        .btn-create {
+            background: var(--gradient);
+            color: white;
+            border: none;
+            padding: 9px 22px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-create:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Calendar Grid */
+        .calendar-container {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .month-nav {
+            display: flex;
+            gap: 15px;
+        }
+
+        .month-btn {
+            background: var(--bg-card);
+            border: none;
+            color: var(--text-primary);
+            padding: 8px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .month-btn:hover {
+            background: var(--accent);
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+        }
+
+        .day-header {
+            text-align: center;
+            padding: 6px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .calendar-day {
+            height: 65px;
+            background: var(--bg-card);
+            border-radius: 8px;
+            padding: 5px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between; /* For day number and dots */
+            overflow: hidden;
+        }
+
+        .calendar-day:hover {
+            background: #1e2a4a;
+            transform: scale(1.05);
+        }
+
+        .calendar-day.has-post {
+            border: 2px solid var(--accent);
+            padding: 3px; /* Adjusted padding */
+        }
+         .calendar-day.has-post:hover {
+            background: var(--accent-hover); /* Highlight on hover for days with posts */
+        }
+
+
+        .day-number {
+            font-weight: 700;
+            font-size: 13px;
+            position: relative;
+            z-index: 10;
+            color: var(--text-primary);
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            align-self: flex-start; /* Align day number to top-left */
+            margin-left: 2px; /* Small margin for day number */
+            margin-top: 2px;
+        }
+
+        .post-indicator {
+            display: flex;
+            gap: 4px; /* Increased gap slightly */
+            z-index: 10;
+            margin-bottom: 4px; /* Space from bottom */
+            flex-wrap: wrap; /* Allow dots to wrap */
+            justify-content: center; /* Center dots if they wrap */
+        }
+
+        .social-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .social-dot.vk { background: #4680C2; }
+        .social-dot.fb { background: #1877f2; }
+        .social-dot.ok { background: #ee8208; }
+        .social-dot.tg { background: #0088cc; }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            overflow-y: auto; /* For long modals */
+            padding: 20px 0; /* Padding for scrollable modals */
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            padding: 30px 40px; /* Adjusted padding */
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            animation: slideIn 0.3s ease;
+            position: relative; /* For close button if added later */
+        }
+        .modal-content.large {
+            max-width: 750px; /* For day posts modal */
+        }
+
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 25px; /* Adjusted margin */
+        }
+         .modal-close-btn {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 28px;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .modal-close-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .form-group {
+            margin-bottom: 20px; /* Adjusted margin */
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px; /* Adjusted margin */
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .form-textarea {
+            width: 100%;
+            min-height: 120px;
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 15px;
+            color: var(--text-primary);
+            font-size: 16px;
+            resize: vertical;
+            transition: all 0.3s ease;
+        }
+
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(233, 69, 96, 0.1);
+        }
+
+        .social-selector {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .social-option {
+            position: relative;
+        }
+
+        .social-checkbox {
+            display: none;
+        }
+
+        .social-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .social-checkbox:checked + .social-label {
+            background: var(--gradient);
+            border-color: transparent;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .datetime-row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .form-input {
+            flex: 1;
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 15px;
+            color: var(--text-primary);
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px; /* Adjusted margin */
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--gradient);
+            color: white;
+            flex: 1;
+        }
+
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 2px solid var(--border);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .stat-title {
+            color: var(--text-secondary);
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-change {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 12px;
+            background: rgba(74, 222, 128, 0.1);
+            color: var(--success);
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .stat-change.negative {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+
+        /* Posts List */
+        .posts-list {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        .posts-list.in-modal { /* Style for posts list in day posts modal */
+            background: transparent;
+            box-shadow: none;
+            padding: 0;
+            max-height: 400px; 
+            overflow-y: auto;
+            /* Minimal scrollbar styling */
+            scrollbar-width: thin;
+            scrollbar-color: var(--border) transparent;
+        }
+        .posts-list.in-modal::-webkit-scrollbar {
+            width: 5px;
+        }
+        .posts-list.in-modal::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .posts-list.in-modal::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+        .posts-list.in-modal::-webkit-scrollbar-thumb:hover {
+            background: var(--accent);
+        }
+
+
+        .post-item {
+            display: flex;
+            gap: 12px;
+            padding: 12px;
+            background: var(--bg-card);
+            border-radius: 15px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+        .posts-list.in-modal .post-item { 
+            margin-bottom: 15px;
+        }
+
+
+        .post-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .post-image {
+            width: 70px;
+            height: 70px;
+            border-radius: 12px;
+            background: var(--gradient);
+            flex-shrink: 0;
+            background-size: cover;
+            background-position: center;
+        }
+         .post-image.in-modal-list { /* Smaller image for day posts modal list */
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+        }
+
+        .post-content {
+            flex: 1;
+        }
+
+        .post-text {
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .post-meta {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            font-size: 12px;
+            flex-wrap: wrap; /* Allow meta items to wrap */
+        }
+
+        .post-date {
+            color: var(--text-secondary);
+        }
+
+        .post-socials {
+            display: flex;
+            gap: 6px;
+        }
+
+        .post-stats {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+        }
+        .posts-list.in-modal .post-stats { 
+            display: none;
+        }
+
+        .post-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center; 
+        }
+
+        .action-btn {
+            padding: 6px;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-size: 16px;
+        }
+
+        .action-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent);
+        }
+        .action-btn.delete-btn:hover {
+            color: #ef4444;
+        }
+
+
+        /* Pricing Plans */
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+            margin-top: 25px;
+        }
+
+        .pricing-card {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            padding: 45px 35px;
+            text-align: center;
+            position: relative;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .pricing-card.featured {
+            border-color: var(--accent);
+            transform: scale(1.05);
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .plan-name {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .plan-price {
+            font-size: 56px;
+            font-weight: 800;
+            margin-bottom: 5px;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .plan-period {
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+            font-size: 18px;
+        }
+
+        .plan-features {
+            list-style: none;
+            margin-bottom: 35px;
+        }
+
+        .plan-feature {
+            padding: 12px 0;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 16px;
+            text-align: left;
+            justify-content: center;
+        }
+
+        .plan-feature::before {
+            content: "✓";
+            color: var(--success);
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .plan-btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .pricing-card.featured .plan-btn {
+            background: var(--gradient);
+            border-color: transparent;
+            color: white;
+        }
+
+        .plan-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .image-upload {
+            position: relative;
+            width: 100%;
+            min-height: 150px;
+            background: var(--bg-card);
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .image-upload:hover {
+            border-color: var(--accent);
+            background: rgba(233, 69, 96, 0.05);
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+            opacity: 0.5;
+        }
+
+        .uploaded-image-preview { 
+            width: 100%;
+            height: 100%; 
+            max-height: 200px; 
+            object-fit: cover;
+            border-radius: 10px; 
+        }
+
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            accent-color: var(--accent);
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .radio-option input[type="radio"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent);
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .current-plan-label {
+            display: inline-block;
+            padding: 6px 16px;
+            background: var(--success);
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 20px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">Суперпостинг</div>
+            
+            <nav>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link active" onclick="showSection('calendar')">
+                            <span class="nav-icon">📅</span>
+                            <span>Календарь</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" onclick="showSection('stats')">
+                            <span class="nav-icon">📊</span>
+                            <span>Статистика</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" onclick="showSection('pricing')">
+                            <span class="nav-icon">💎</span>
+                            <span>Тарифы</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <span class="nav-icon">💬</span>
+                            <span>Поддержка</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <span class="nav-icon">⚙️</span>
+                            <span>Настройки</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <div class="user-profile">
+                <div class="user-avatar">БН</div>
+                <div>
+                    <div style="font-weight: 600;">Березин Никита</div>
+                    <div style="font-size: 14px; color: var(--text-secondary);">Тариф: Базовый</div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Calendar Section -->
+            <section id="calendar-section">
+                <div class="header">
+                    <h1 class="page-title">Календарь публикаций</h1>
+                    <button class="btn-create" onclick="openPostModal()">
+                        <span>+</span>
+                        <span>Создать пост</span>
+                    </button>
+                </div>
+
+                <div class="calendar-container">
+                    <div class="calendar-header">
+                        <h2 style="font-size: 20px;">Май 2025</h2>
+                        <div class="month-nav">
+                            <button class="month-btn">←</button>
+                            <button class="month-btn">→</button>
+                        </div>
+                    </div>
+
+                    <div class="calendar-grid">
+                        <div class="day-header">Пн</div>
+                        <div class="day-header">Вт</div>
+                        <div class="day-header">Ср</div>
+                        <div class="day-header">Чт</div>
+                        <div class="day-header">Пт</div>
+                        <div class="day-header">Сб</div>
+                        <div class="day-header">Вс</div>
+
+                        <!-- Calendar days -->
+                        <div class="calendar-day" style="opacity: 0.3;"><span class="day-number">28</span></div>
+                        <div class="calendar-day" style="opacity: 0.3;"><span class="day-number">29</span></div>
+                        <div class="calendar-day" style="opacity: 0.3;"><span class="day-number">30</span></div>
+                        <div class="calendar-day" data-day="1"><span class="day-number">1</span><div class="post-indicator"></div></div>
+                        <div class="calendar-day" data-day="2"><span class="day-number">2</span><div class="post-indicator"></div></div>
+                        <div class="calendar-day" data-day="3"><span class="day-number">3</span><div class="post-indicator"></div></div>
+                        <div class="calendar-day" data-day="4"><span class="day-number">4</span><div class="post-indicator"></div></div>
+
+                        <div class="calendar-day has-post" data-day="5" data-id="initial_post_5_1" data-text="Тут будет первая строка текста поста..." data-socials="vk">
+                            <span class="day-number">5</span>
+                            <div class="post-indicator">
+                                <div class="social-dot vk"></div>
+                            </div>
+                        </div>
+                        <div class="calendar-day" data-day="6"><span class="day-number">6</span><div class="post-indicator"></div></div>
+                        <div class="calendar-day" data-day="7"><span class="day-number">7</span><div class="post-indicator"></div></div>
+                        <div class="calendar-day" data-day="8"><span class="day-number">8</span><div class="post-indicator"></div></div>
+                        <div class="calendar-day has-post" data-day="9" data-id="initial_post_9_1" data-text="Специальное предложение для всех наших клиентов..." data-socials="vk,fb">
+                            <span class="day-number">9</span>
+                            <div class="post-indicator">
+                                <div class="social-dot vk"></div>
+                                <div class="social-dot fb"></div>
+                            </div>
+                        </div>
+                        <div class="calendar-day" data-day="10"><span class="day-number">10</span><div class="post-indicator"></div></div>
+                        <div class="calendar-day" data-day="11"><span class="day-number">11</span><div class="post-indicator"></div></div>
+
+                        <div class="calendar-day" data-day="12"><span class="day-number">12</span><div class="post-indicator"></div></div>
+                        <div class="calendar-day" data-day="13"><span class="day-number">13</span><div class="post-indicator"></div></div>
+                        <div class="calendar-day" data-day="14"><span class="day-number">14</span><div class="post-indicator"></div></div>
+                        <div class="calendar-day has-post" data-day="15" data-id="initial_post_15_1" data-text="Новая коллекция уже в продаже! Успейте..." data-socials="vk,fb,ok" data-image-src="gradient1"> 
+                            <span class="day-number">15</span>
+                             <div class="post-indicator"></div>
+                        </div>
+                        <div class="calendar-day has-post" data-day="16" data-id="initial_post_16_1" data-text="Важное обновление для всех пользователей..." data-socials="tg">
+                            <span class="day-number">16</span>
+                            <div class="post-indicator"></div>
+                        </div>
+                        <div class="calendar-day" data-day="17"><span class="day-number">17</span><div class="post-indicator"></div></div>
+                        <div class="calendar-day" data-day="18"><span class="day-number">18</span><div class="post-indicator"></div></div>
+
+                        <div class="calendar-day" data-day="19"><span class="day-number">19</span><div class="post-indicator"></div></div>
+                        <div class="calendar-day" data-day="20"><span class="day-number">20</span><div class="post-indicator"></div></div>
+                        <div class="calendar-day" data-day="21"><span class="day-number">21</span><div class="post-indicator"></div></div>
+                        <div class="calendar-day" data-day="22"><span class="day-number">22</span><div class="post-indicator"></div></div>
+                        <div class="calendar-day" data-day="23"><span class="day-number">23</span><div class="post-indicator"></div></div>
+                        <div class="calendar-day has-post" data-day="24" data-id="initial_post_24_1" data-text="Сегодняшняя рекомендация от нашего книжного уголка..." data-socials="vk,ok" data-image-src="gradient2"> 
+                            <span class="day-number">24</span>
+                            <div class="post-indicator"></div>
+                        </div>
+                        <div class="calendar-day" data-day="25"><span class="day-number">25</span><div class="post-indicator"></div></div>
+
+                        <div class="calendar-day" data-day="26"><span class="day-number">26</span><div class="post-indicator"></div></div>
+                        <div class="calendar-day has-post" data-day="27" data-id="initial_post_27_1" data-text="Скидки до 50% на весь ассортимент..." data-socials="vk,fb">
+                            <span class="day-number">27</span>
+                            <div class="post-indicator"></div>
+                        </div>
+                        <div class="calendar-day has-post" data-day="28" data-id="initial_post_28_1" data-text="Последний день акции! Не упустите шанс..." data-socials="vk,fb">
+                            <span class="day-number">28</span>
+                            <div class="post-indicator"></div>
+                        </div>
+                        <div class="calendar-day" data-day="29"><span class="day-number">29</span><div class="post-indicator"></div></div>
+                        <div class="calendar-day" data-day="30"><span class="day-number">30</span><div class="post-indicator"></div></div>
+                        <div class="calendar-day" data-day="31"><span class="day-number">31</span><div class="post-indicator"></div></div>
+                        <div class="calendar-day" style="opacity: 0.3;"><span class="day-number">1</span></div>
+                    </div>
+                </div>
+
+                <!-- Recent Posts -->
+                <div class="posts-list" id="recentPostsList">
+                    <h2 style="font-size: 20px; margin-bottom: 12px;">Последние публикации</h2>
+                    <!-- Posts will be dynamically inserted here by renderRecentPosts() -->
+                </div>
+            </section>
+
+            <!-- Stats Section (Hidden by default) -->
+            <section id="stats-section" style="display: none;">
+                <div class="header">
+                    <h1 class="page-title">Статистика</h1>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title">Всего просмотров</span>
+                            <span class="stat-change">+15.3%</span>
+                        </div>
+                        <div class="stat-value">254.6K</div>
+                        <div style="color: var(--text-secondary);">За последние 30 дней</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title">Опубликовано постов</span>
+                            <span class="stat-change">+8</span>
+                        </div>
+                        <div class="stat-value">88</div>
+                        <div style="color: var(--text-secondary);">Всего за месяц</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title">Средний охват</span>
+                            <span class="stat-change negative">-2.1%</span>
+                        </div>
+                        <div class="stat-value">12.4K</div>
+                        <div style="color: var(--text-secondary);">На один пост</div>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+                    <div class="posts-list">
+                        <h2 style="font-size: 20px; margin-bottom: 15px;">Топ по просмотрам</h2>
+                        
+                        <div class="post-item">
+                            <div class="post-image" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
+                            <div class="post-content">
+                                <p class="post-text">🔥 Самая ожидаемая новинка года! Предзаказ уже открыт.</p>
+                                <div class="post-meta">
+                                    <span class="post-date">15.05.2025</span>
+                                    <div class="post-socials">
+                                        <div class="social-dot vk"></div>
+                                        <div class="social-dot tg"></div>
+                                    </div>
+                                    <div class="post-stats">
+                                        <span>👁 45.2k</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="post-item">
+                            <div class="post-image" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);"></div>
+                            <div class="post-content">
+                                <p class="post-text">💎 Эксклюзивное предложение для подписчиков!</p>
+                                <div class="post-meta">
+                                    <span class="post-date">09.05.2025</span>
+                                    <div class="post-socials">
+                                        <div class="social-dot fb"></div>
+                                        <div class="social-dot ok"></div>
+                                    </div>
+                                    <div class="post-stats">
+                                        <span>👁 38.7k</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="post-item">
+                            <div class="post-image" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);"></div>
+                            <div class="post-content">
+                                <p class="post-text">🎯 Специальная акция только для вас!</p>
+                                <div class="post-meta">
+                                    <span class="post-date">03.05.2025</span>
+                                     <div class="post-socials">
+                                        <div class="social-dot vk"></div>
+                                    </div>
+                                    <div class="post-stats">
+                                        <span>👁 31.4k</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="post-item">
+                            <div class="post-image" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);"></div>
+                            <div class="post-content">
+                                <p class="post-text">🎉 Праздничные скидки до 50%!</p>
+                                <div class="post-meta">
+                                    <span class="post-date">01.05.2025</span>
+                                    <div class="post-socials">
+                                        <div class="social-dot vk"></div>
+                                        <div class="social-dot fb"></div>
+                                        <div class="social-dot ok"></div>
+                                        <div class="social-dot tg"></div>
+                                    </div>
+                                    <div class="post-stats">
+                                        <span>👁 28.9k</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="posts-list">
+                        <h2 style="font-size: 20px; margin-bottom: 15px;">Последние посты</h2>
+                        
+                        <div class="post-item">
+                            <div class="post-image" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);"></div>
+                            <div class="post-content">
+                                <p class="post-text">🚀 Только 3 дня! Мега-распродажа со скидками до 70%.</p>
+                                <div class="post-meta">
+                                    <span class="post-date">28.05.2025</span>
+                                    <div class="post-socials">
+                                        <div class="social-dot vk"></div>
+                                        <div class="social-dot fb"></div>
+                                    </div>
+                                    <div class="post-stats">
+                                        <span>👁 4.8k</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="post-item">
+                            <div class="post-image" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);"></div>
+                            <div class="post-content">
+                                <p class="post-text">💡 Новая коллекция уже в продаже!</p>
+                                <div class="post-meta">
+                                    <span class="post-date">27.05.2025</span>
+                                    <div class="post-socials">
+                                        <div class="social-dot vk"></div>
+                                    </div>
+                                    <div class="post-stats">
+                                        <span>👁 2.3k</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="post-item">
+                            <div class="post-image" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
+                            <div class="post-content">
+                                <p class="post-text">📢 Важное обновление для всех клиентов</p>
+                                <div class="post-meta">
+                                    <span class="post-date">26.05.2025</span>
+                                    <div class="post-socials">
+                                        <div class="social-dot tg"></div>
+                                    </div>
+                                    <div class="post-stats">
+                                        <span>👁 1.9k</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="post-item">
+                            <div class="post-image" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);"></div>
+                            <div class="post-content">
+                                <p class="post-text">✨ Новые возможности уже доступны!</p>
+                                <div class="post-meta">
+                                    <span class="post-date">25.05.2025</span>
+                                    <div class="post-socials">
+                                        <div class="social-dot ok"></div>
+                                    </div>
+                                    <div class="post-stats">
+                                        <span>👁 1.2k</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Pricing Section (Hidden by default) -->
+            <section id="pricing-section" style="display: none;">
+                <div class="header">
+                    <h1 class="page-title">Тарифные планы</h1>
+                </div>
+
+                <div class="pricing-grid">
+                    <div class="pricing-card">
+                        <h3 class="plan-name">Бесплатный</h3>
+                        <div class="plan-price">0₽</div>
+                        <div class="plan-period">навсегда</div>
+                        <ul class="plan-features">
+                            <li class="plan-feature">1 социальная сеть</li>
+                            <li class="plan-feature">До 10 постов в месяц</li>
+                            <li class="plan-feature">Базовая статистика</li>
+                            <li class="plan-feature">Ручная публикация</li>
+                        </ul>
+                        <button class="plan-btn">Попробовать бесплатно</button>
+                    </div>
+
+                    <div class="pricing-card featured">
+                        <span class="current-plan-label">Текущий план</span>
+                        <h3 class="plan-name">Базовый</h3>
+                        <div class="plan-price">490₽</div>
+                        <div class="plan-period">в месяц</div>
+                        <ul class="plan-features">
+                            <li class="plan-feature">4 социальные сети</li>
+                            <li class="plan-feature">До 100 постов в месяц</li>
+                            <li class="plan-feature">Расширенная статистика</li>
+                            <li class="plan-feature">Автопубликация</li>
+                            <li class="plan-feature">Планировщик постов</li>
+                        </ul>
+                        <button class="plan-btn" disabled style="opacity: 0.6; cursor: not-allowed;">Активен до 28.06.2025</button>
+                    </div>
+
+                    <div class="pricing-card">
+                        <h3 class="plan-name">Продвинутый</h3>
+                        <div class="plan-price">990₽</div>
+                        <div class="plan-period">в месяц</div>
+                        <ul class="plan-features">
+                            <li class="plan-feature">Все социальные сети</li>
+                            <li class="plan-feature">Безлимит постов</li>
+                            <li class="plan-feature">Аналитика и отчеты</li>
+                            <li class="plan-feature">API доступ</li>
+                            <li class="plan-feature">Приоритетная поддержка</li>
+                            <li class="plan-feature">Командная работа</li>
+                        </ul>
+                        <button class="plan-btn">Улучшить план</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Create/Edit Post Modal -->
+    <div class="modal" id="postModal">
+        <div class="modal-content">
+            <button class="modal-close-btn" onclick="closePostModal()">×</button>
+            <h2 class="modal-header" id="postModalTitle">Создание поста</h2>
+            
+            <form id="postForm">
+                <input type="hidden" id="editingPostId">
+                <input type="hidden" id="editingPostDay">
+
+                <div class="form-group">
+                    <label class="form-label">Текст поста</label>
+                    <textarea id="postText" class="form-textarea" placeholder="Введите текст вашего поста..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Добавить изображение</label>
+                    <input type="file" id="imageInput" accept="image/*">
+                    <div class="image-upload" id="imageUploadArea">
+                        <span class="upload-icon">📷</span>
+                        <span>Нажмите для загрузки изображения</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Социальные сети для публикации</label>
+                    <div class="social-selector">
+                        <div class="social-option">
+                            <input type="checkbox" id="vk" name="socialNetwork" value="vk" class="social-checkbox">
+                            <label for="vk" class="social-label">VK</label>
+                        </div>
+                        <div class="social-option">
+                            <input type="checkbox" id="fb" name="socialNetwork" value="fb" class="social-checkbox">
+                            <label for="fb" class="social-label">FB</label>
+                        </div>
+                        <div class="social-option">
+                            <input type="checkbox" id="ok" name="socialNetwork" value="ok" class="social-checkbox">
+                            <label for="ok" class="social-label">OK</label>
+                        </div>
+                        <div class="social-option">
+                            <input type="checkbox" id="tg" name="socialNetwork" value="tg" class="social-checkbox">
+                            <label for="tg" class="social-label">TG</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Когда опубликовать?</label>
+                    <div class="radio-group">
+                        <div class="radio-option">
+                            <input type="radio" id="publishNow" name="publishTime" value="now" checked>
+                            <label for="publishNow">Опубликовать сейчас</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="publishScheduled" name="publishTime" value="scheduled">
+                            <label for="publishScheduled">Запланировать публикацию</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group datetime-row" id="datetimeFields" style="display: none;">
+                    <input type="date" id="postDate" class="form-input" value="2025-05-12">
+                    <input type="time" id="postTime" class="form-input" value="12:00">
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closePostModal()">Отмена</button>
+                    <button type="button" class="btn btn-primary" onclick="savePost()">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Day Posts Modal -->
+    <div class="modal" id="dayPostsModal">
+        <div class="modal-content large">
+             <button class="modal-close-btn" onclick="closeDayPostsModal()">×</button>
+            <h2 class="modal-header" id="dayPostsModalTitle">Публикации на день</h2>
+            <div class="posts-list in-modal" id="dayPostsModalList">
+                <!-- Posts for the day will be injected here -->
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        let uploadedImage = null;
+        let posts = {}; 
+        const CURRENT_YEAR = 2025;
+        const CURRENT_MONTH_JS = 4; // May (0-indexed)
+
+        // --- Modal Management ---
+        function openPostModal(postId = null, targetDayForNewPost = null) {
+            const modal = document.getElementById('postModal');
+            const title = document.getElementById('postModalTitle');
+            const form = document.getElementById('postForm');
+            const imageUploadArea = document.getElementById('imageUploadArea');
+            
+            form.reset(); 
+            document.getElementById('editingPostId').value = '';
+            document.getElementById('editingPostDay').value = '';
+            imageUploadArea.innerHTML = `<span class="upload-icon">📷</span><span>Нажмите для загрузки изображения</span>`;
+            uploadedImage = null;
+            document.getElementById('datetimeFields').style.display = 'none';
+            document.getElementById('publishNow').checked = true;
+
+
+            if (postId && targetDayForNewPost !== null && posts[targetDayForNewPost]) { // Editing
+                const postToEdit = posts[targetDayForNewPost].find(p => p.id === postId);
+                if (postToEdit) {
+                    title.textContent = 'Редактирование поста';
+                    document.getElementById('editingPostId').value = postId;
+                    document.getElementById('editingPostDay').value = targetDayForNewPost;
+                    document.getElementById('postText').value = postToEdit.text;
+
+                    if (postToEdit.image && !postToEdit.image.startsWith('gradient')) { 
+                        uploadedImage = postToEdit.image;
+                        imageUploadArea.innerHTML = `<img src="${uploadedImage}" class="uploaded-image-preview" alt="Uploaded">`;
+                    } else if (postToEdit.image && postToEdit.image.startsWith('gradient')) {
+                         imageUploadArea.innerHTML = `<span class="upload-icon">🖼️</span><span>Изображение-градиент (нередактируемо)</span>`;
+                    }
+
+
+                    postToEdit.social.forEach(socialNetwork => {
+                        const checkbox = document.getElementById(socialNetwork);
+                        if (checkbox) checkbox.checked = true;
+                    });
+
+                    document.getElementById('publishScheduled').checked = true;
+                    document.getElementById('datetimeFields').style.display = 'flex';
+                    document.getElementById('postDate').value = postToEdit.date;
+                    document.getElementById('postTime').value = postToEdit.time;
+                }
+            } else { // Creating new post
+                title.textContent = 'Создание поста';
+                let dateToSet;
+                if (targetDayForNewPost !== null) { 
+                    dateToSet = new Date(CURRENT_YEAR, CURRENT_MONTH_JS, targetDayForNewPost);
+                } else {
+                    dateToSet = new Date(); // Default to today
+                }
+                const year = dateToSet.getFullYear();
+                const month = String(dateToSet.getMonth() + 1).padStart(2, '0');
+                const dayOfMonthStr = String(dateToSet.getDate()).padStart(2, '0');
+                document.getElementById('postDate').value = `${year}-${month}-${dayOfMonthStr}`;
+                document.getElementById('postTime').value = new Date().toTimeString().slice(0,5); 
+            }
+            modal.classList.add('active');
+        }
+
+        function closePostModal() {
+            document.getElementById('postModal').classList.remove('active');
+            document.getElementById('postForm').reset();
+            document.getElementById('imageUploadArea').innerHTML = `
+                <span class="upload-icon">📷</span>
+                <span>Нажмите для загрузки изображения</span>
+            `;
+            uploadedImage = null;
+            document.getElementById('editingPostId').value = '';
+            document.getElementById('editingPostDay').value = '';
+        }
+
+        function openDayPostsModal(day) {
+            const modal = document.getElementById('dayPostsModal');
+            const title = document.getElementById('dayPostsModalTitle');
+            const listElement = document.getElementById('dayPostsModalList');
+            listElement.innerHTML = ''; 
+
+            const dayPosts = posts[day] || [];
+            const dateForTitle = new Date(CURRENT_YEAR, CURRENT_MONTH_JS, day).toLocaleDateString('ru-RU', {day: 'numeric', month: 'long'});
+            title.textContent = `Публикации на ${dateForTitle}`;
+
+            if (dayPosts.length === 0) {
+                listElement.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">На этот день нет запланированных публикаций.</p>';
+            } else {
+                dayPosts.forEach(post => {
+                    const postItem = createPostListItem(post, day, true); 
+                    listElement.appendChild(postItem);
+                });
+            }
+            modal.classList.add('active');
+        }
+
+        function closeDayPostsModal() {
+            document.getElementById('dayPostsModal').classList.remove('active');
+        }
+
+
+        // Handle image upload
+        document.getElementById('imageUploadArea').addEventListener('click', () => {
+            if (document.getElementById('editingPostId').value) {
+                 const postId = document.getElementById('editingPostId').value;
+                 const postDay = parseInt(document.getElementById('editingPostDay').value);
+                 const postToEdit = posts[postDay]?.find(p => p.id === postId);
+                 if (postToEdit && postToEdit.image && postToEdit.image.startsWith('gradient')) {
+                    return;
+                 }
+            }
+            document.getElementById('imageInput').click();
+        });
+
+        document.getElementById('imageInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    uploadedImage = event.target.result;
+                    document.getElementById('imageUploadArea').innerHTML = `
+                        <img src="${uploadedImage}" class="uploaded-image-preview" alt="Uploaded">
+                    `;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Toggle datetime fields
+        document.querySelectorAll('input[name="publishTime"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const datetimeFields = document.getElementById('datetimeFields');
+                datetimeFields.style.display = this.value === 'scheduled' ? 'flex' : 'none';
+            });
+        });
+
+        // --- Post Logic ---
+        function generatePostId() {
+            return 'post_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        function savePost() {
+            const text = document.getElementById('postText').value;
+            const isScheduled = document.getElementById('publishScheduled').checked;
+            
+            let date, time;
+            if (isScheduled) {
+                date = document.getElementById('postDate').value;
+                time = document.getElementById('postTime').value;
+            } else {
+                const now = new Date();
+                date = now.toISOString().split('T')[0];
+                time = now.toTimeString().slice(0, 5);
+            }
+            
+            const socialNetworks = Array.from(document.querySelectorAll('.social-checkbox:checked')).map(cb => cb.value);
+
+            if (!text.trim() || socialNetworks.length === 0) {
+                alert('Пожалуйста, введите текст и выберите хотя бы одну социальную сеть.');
+                return;
+            }
+
+            const editingPostId = document.getElementById('editingPostId').value;
+            const editingPostDay = document.getElementById('editingPostDay').value ? parseInt(document.getElementById('editingPostDay').value) : null;
+            const dayOfMonth = new Date(date).getDate();
+
+            if (editingPostId && editingPostDay !== null && posts[editingPostDay]) { 
+                const postIndex = posts[editingPostDay].findIndex(p => p.id === editingPostId);
+                if (postIndex > -1) {
+                    const originalPost = posts[editingPostDay][postIndex];
+                    const updatedPost = {
+                        ...originalPost,
+                        text: text,
+                        image: uploadedImage || originalPost.image, 
+                        date: date,
+                        time: time,
+                        social: socialNetworks
+                    };
+
+                    if (dayOfMonth !== editingPostDay) {
+                        posts[editingPostDay].splice(postIndex, 1); 
+                        if (!posts[editingPostDay] || posts[editingPostDay].length === 0) {
+                             delete posts[editingPostDay]; // Clean up if day becomes empty
+                        }
+                        updateCalendarDay(editingPostDay); 
+
+                        if (!posts[dayOfMonth]) posts[dayOfMonth] = [];
+                        posts[dayOfMonth].push(updatedPost);
+                    } else {
+                        posts[editingPostDay][postIndex] = updatedPost;
+                    }
+                }
+            } else { 
+                const newPost = {
+                    id: generatePostId(),
+                    text: text,
+                    image: uploadedImage,
+                    date: date,
+                    time: time,
+                    social: socialNetworks
+                };
+                if (!posts[dayOfMonth]) {
+                    posts[dayOfMonth] = [];
+                }
+                posts[dayOfMonth].push(newPost);
+            }
+            
+            updateCalendarDay(dayOfMonth);
+            if (editingPostDay !== null && dayOfMonth !== editingPostDay) {
+                 updateCalendarDay(editingPostDay); 
+            }
+            renderRecentPosts();
+            closePostModal();
+            if (document.getElementById('dayPostsModal').classList.contains('active')) {
+                const activeDayText = document.getElementById('dayPostsModalTitle').textContent;
+                const activeDayMatch = activeDayText.match(/(\d+)\s+\w+/); // Extracts day number like "Публикации на 5 мая"
+                if (activeDayMatch && activeDayMatch[1]) {
+                    const activeDay = parseInt(activeDayMatch[1]);
+                    if(activeDay === dayOfMonth || (editingPostDay && activeDay === editingPostDay) ){
+                        openDayPostsModal(activeDay);
+                    }
+                }
+            }
+        }
+
+        function deletePost(postId, day) {
+            if (confirm('Вы уверены, что хотите удалить этот пост?')) {
+                if (posts[day]) {
+                    posts[day] = posts[day].filter(p => p.id !== postId);
+                    if (posts[day].length === 0) {
+                        delete posts[day];
+                    }
+                    updateCalendarDay(day);
+                    renderRecentPosts();
+                    if (document.getElementById('dayPostsModal').classList.contains('active')) {
+                        const activeDayText = document.getElementById('dayPostsModalTitle').textContent;
+                        const activeDayMatch = activeDayText.match(/(\d+)\s+\w+/);
+                        if (activeDayMatch && activeDayMatch[1]) {
+                            const activeDayInModal = parseInt(activeDayMatch[1]);
+                            if(activeDayInModal === day){
+                                openDayPostsModal(day); 
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // --- UI Updates ---
+        function updateCalendarDay(day) {
+            const dayElement = document.querySelector(`.calendar-day[data-day="${day}"]`);
+            if (!dayElement) return;
+
+            const dayPosts = posts[day] || [];
+            const indicatorContainer = dayElement.querySelector('.post-indicator');
+            if (!indicatorContainer) return; // Should not happen if HTML is correct
+            indicatorContainer.innerHTML = ''; 
+
+            if (dayPosts.length > 0) {
+                dayElement.classList.add('has-post');
+                const uniqueSocials = new Set();
+                dayPosts.forEach(post => post.social.forEach(s => uniqueSocials.add(s)));
+                
+                uniqueSocials.forEach(social => {
+                    const dot = document.createElement('div');
+                    dot.className = `social-dot ${social}`;
+                    indicatorContainer.appendChild(dot);
+                });
+            } else {
+                dayElement.classList.remove('has-post');
+            }
+        }
+        
+        function createPostListItem(post, dayForPostId, inModal = false) {
+            const postItem = document.createElement('div');
+            postItem.className = 'post-item';
+            postItem.dataset.postId = post.id; 
+            postItem.dataset.day = new Date(post.date).getDate();
+
+
+            const formattedDate = new Date(post.date).toLocaleDateString('ru-RU', {
+                day: '2-digit', month: '2-digit', year: 'numeric'
+            });
+            
+            let imageHtml = '';
+            let gradientStyle = 'var(--gradient)'; // Default gradient
+
+            if (post.image && !post.image.startsWith('gradient')) {
+                imageHtml = `<div class="post-image ${inModal ? 'in-modal-list' : ''}" style="background-image: url(${post.image})"></div>`;
+            } else { // Handles null, undefined, or gradient strings
+                if (post.image === 'gradient_orange_yellow') gradientStyle = 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)';
+                else if (post.image === 'gradient_blue_cyan') gradientStyle = 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)';
+                else if (post.image === 'gradient_purple_blue') gradientStyle = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                else if (post.image === 'gradient_pink_magenta') gradientStyle = 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)';
+                else if (post.image === 'gradient1') gradientStyle = 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)';
+                else if (post.image === 'gradient2') gradientStyle = 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)';
+                
+                imageHtml = `<div class="post-image ${inModal ? 'in-modal-list' : ''}" style="background: ${gradientStyle};"></div>`;
+            }
+            
+            let socialHtml = '';
+            post.social.forEach(social => {
+                socialHtml += `<div class="social-dot ${social}"></div>`;
+            });
+
+            // Use views from post object if available, otherwise default to 0
+            const views = post.views !== undefined ? post.views : (inModal ? '' : '0'); // No views in modal list
+            const statsHtml = !inModal ? `<div class="post-stats"><span>👁 ${views}</span></div>` : '';
+            
+            postItem.innerHTML = `
+                ${imageHtml}
+                <div class="post-content">
+                    <p class="post-text">${post.text}</p>
+                    <div class="post-meta">
+                        <span class="post-date">${formattedDate} • ${post.time}</span>
+                        <div class="post-socials">
+                            ${socialHtml}
+                        </div>
+                        ${statsHtml}
+                    </div>
+                </div>
+                <div class="post-actions">
+                    <button class="action-btn edit-btn">✏️</button>
+                    <button class="action-btn delete-btn">🗑️</button>
+                </div>
+            `;
+            
+            postItem.querySelector('.edit-btn').addEventListener('click', (e) => {
+                e.stopPropagation(); 
+                const pId = postItem.dataset.postId;
+                const pDay = parseInt(postItem.dataset.day);
+                openPostModal(pId, pDay);
+                if (inModal) closeDayPostsModal(); 
+            });
+            postItem.querySelector('.delete-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                const pId = postItem.dataset.postId;
+                const pDay = parseInt(postItem.dataset.day);
+                deletePost(pId, pDay);
+            });
+
+            return postItem;
+        }
+
+
+        function renderRecentPosts() {
+            const postsListContainer = document.getElementById('recentPostsList');
+            while (postsListContainer.children.length > 1) {
+                postsListContainer.removeChild(postsListContainer.lastChild);
+            }
+
+            const allPostsFlat = Object.values(posts).flat().sort((a, b) => {
+                const dateA = new Date(`${a.date}T${a.time}`);
+                const dateB = new Date(`${b.date}T${b.time}`);
+                return dateB - dateA;
+            });
+
+            const recentCount = 4; // Show 4 recent posts as per screenshot
+            allPostsFlat.slice(0, recentCount).forEach(post => {
+                const dayForPost = new Date(post.date).getDate();
+                const listItem = createPostListItem(post, dayForPost);
+                postsListContainer.appendChild(listItem);
+            });
+        }
+
+
+        // --- Event Listeners ---
+        document.addEventListener('DOMContentLoaded', () => {
+            posts = {}; // Clear for fresh population
+
+            // 1. Populate with initial data from calendar day elements
+            document.querySelectorAll('.calendar-day.has-post[data-day]').forEach(dayEl => {
+                const day = parseInt(dayEl.dataset.day);
+                const id = dayEl.dataset.id || generatePostId(); 
+                const text = dayEl.dataset.text || "Пример текста из HTML";
+                const imageAttr = dayEl.dataset.imageSrc || null; 
+                
+                const socialsString = dayEl.dataset.socials || "";
+                const social = socialsString.split(',').map(s => s.trim()).filter(s => s);
+
+                const postDate = `${CURRENT_YEAR}-${String(CURRENT_MONTH_JS + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                
+                if (!posts[day]) {
+                    posts[day] = [];
+                }
+                if (!posts[day].find(p => p.id === id)) {
+                    posts[day].push({
+                        id: id,
+                        text: text,
+                        image: imageAttr, 
+                        date: postDate,
+                        time: '12:00', 
+                        social: social,
+                        views: Math.floor(Math.random() * 5000 /1000) + 'k' // Add random views for demo
+                    });
+                }
+            });
+
+            // 2. Add/Merge the 4 posts for "Recent Posts" (from stats screenshot)
+            const recentPostsDataForCalendarPage = [
+                { day: 28, id: 'stats_post_28_1', text: '🚀 Только 3 дня! Мега-распродажа со скидками до 70%.', image: 'gradient_orange_yellow', social: ['vk', 'fb'], time: '10:00', views: '4.8k' },
+                { day: 27, id: 'stats_post_27_1', text: '💡 Новая коллекция уже в продаже!', image: 'gradient_blue_cyan', social: ['vk'], time: '11:30', views: '2.3k'  }, // Matched time from screenshot
+                { day: 26, id: 'stats_post_26_1', text: '📢 Важное обновление для всех клиентов', image: 'gradient_purple_blue', social: ['tg'], time: '12:00', views: '1.9k' },
+                { day: 25, id: 'stats_post_25_1', text: '✨ Новые возможности уже доступны!', image: 'gradient_pink_magenta', social: ['ok'], time: '13:00', views: '1.2k' }
+            ];
+
+            recentPostsDataForCalendarPage.forEach(rp => {
+                if (!posts[rp.day]) {
+                    posts[rp.day] = [];
+                }
+                // If a post with this ID already exists, update it (or skip if IDs are truly unique)
+                const existingPostIndex = posts[rp.day].findIndex(p => p.id === rp.id);
+                if (existingPostIndex > -1) {
+                    posts[rp.day][existingPostIndex] = { ...posts[rp.day][existingPostIndex], ...rp };
+                } else {
+                     posts[rp.day].push({
+                        id: rp.id,
+                        text: rp.text,
+                        image: rp.image,
+                        date: `${CURRENT_YEAR}-${String(CURRENT_MONTH_JS + 1).padStart(2, '0')}-${String(rp.day).padStart(2, '0')}`,
+                        time: rp.time,
+                        social: rp.social,
+                        views: rp.views
+                    });
+                }
+            });
+            
+            // 3. Update all calendar day visuals
+            Object.keys(posts).forEach(dayNumStr => updateCalendarDay(parseInt(dayNumStr)));
+            // Also ensure empty days without posts are correctly rendered (no 'has-post')
+            document.querySelectorAll('.calendar-day[data-day]').forEach(dayEl => {
+                const day = parseInt(dayEl.dataset.day);
+                if (!posts[day]) { // If a day was in HTML but no posts ended up for it
+                    dayEl.classList.remove('has-post');
+                    const indicator = dayEl.querySelector('.post-indicator');
+                    if(indicator) indicator.innerHTML = '';
+                }
+            });
+
+
+            // 4. Render the "Последние публикации" list
+            renderRecentPosts(); 
+
+            // Calendar day clicks
+            document.querySelectorAll('.calendar-day[data-day]').forEach(dayEl => {
+                dayEl.addEventListener('click', () => {
+                    const day = parseInt(dayEl.dataset.day);
+                    if (posts[day] && posts[day].length > 0) {
+                        openDayPostsModal(day);
+                    } else {
+                        openPostModal(null, day); // Pass the clicked day for pre-filling date
+                    }
+                });
+            });
+        });
+
+        // Close modal on outside click (for both modals)
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    if (this.id === 'postModal') closePostModal();
+                    if (this.id === 'dayPostsModal') closeDayPostsModal();
+                }
+            });
+        });
+        
+
+        // Switch sections
+        function showSection(section) {
+            document.getElementById('calendar-section').style.display = 'none';
+            document.getElementById('stats-section').style.display = 'none';
+            document.getElementById('pricing-section').style.display = 'none';
+            
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            
+            if (section === 'calendar') {
+                document.getElementById('calendar-section').style.display = 'block';
+                document.querySelectorAll('.nav-link')[0].classList.add('active');
+            } else if (section === 'stats') {
+                document.getElementById('stats-section').style.display = 'block';
+                document.querySelectorAll('.nav-link')[1].classList.add('active');
+            } else if (section === 'pricing') {
+                document.getElementById('pricing-section').style.display = 'block';
+                document.querySelectorAll('.nav-link')[2].classList.add('active');
+            }
+        }
+    </script>
+</body>
+</html>
