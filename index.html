@@ -467,6 +467,24 @@
         .radio-group { display: flex; gap: 20px; margin-bottom: 20px; }
         .radio-option { display: flex; align-items: center; gap: 8px; }
         .radio-option input[type="radio"] { width: 18px; height: 18px; accent-color: var(--accent); }
+        
+        .recurring-options {
+            background: var(--bg-card);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+        .recurring-type {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+        .recurring-details .datetime-row {
+            margin-bottom: 15px;
+        }
+        .recurring-details .datetime-row:last-child {
+            margin-bottom: 0;
+        }
         input[type="file"] { display: none; }
         .current-plan-label {
             display: inline-block; padding: 6px 16px; background: var(--success); color: white;
@@ -887,12 +905,70 @@
                             <input type="radio" id="publishScheduled" name="publishTime" value="scheduled">
                             <label for="publishScheduled">Запланировать публикацию</label>
                         </div>
+                        <div class="radio-option">
+                            <input type="radio" id="publishRecurring" name="publishTime" value="recurring">
+                            <label for="publishRecurring">Повторяющиеся публикации</label>
+                        </div>
                     </div>
                 </div>
 
                 <div class="form-group datetime-row" id="datetimeFields" style="display: none;">
-                    <input type="date" id="postDate" class="form-input" value="2025-05-12">
+                    <input type="date" id="postDate" class="form-input">
                     <input type="time" id="postTime" class="form-input" value="12:00">
+                </div>
+
+                <div class="form-group" id="recurringFields" style="display: none;">
+                    <label class="form-label">Настройки повторения</label>
+                    <div class="recurring-options">
+                        <div class="recurring-type">
+                            <label class="form-label" style="margin-bottom: 10px;">Повторять:</label>
+                            <div class="radio-group" style="margin-bottom: 15px;">
+                                <div class="radio-option">
+                                    <input type="radio" id="recurDaily" name="recurType" value="daily" checked>
+                                    <label for="recurDaily">Каждый день</label>
+                                </div>
+                                <div class="radio-option">
+                                    <input type="radio" id="recurWeekly" name="recurType" value="weekly">
+                                    <label for="recurWeekly">Каждую неделю</label>
+                                </div>
+                                <div class="radio-option">
+                                    <input type="radio" id="recurCustom" name="recurType" value="custom">
+                                    <label for="recurCustom">Каждые N дней</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="recurring-details">
+                            <div class="datetime-row">
+                                <div>
+                                    <label class="form-label">Начальная дата</label>
+                                    <input type="date" id="recurStartDate" class="form-input">
+                                </div>
+                                <div>
+                                    <label class="form-label">Время</label>
+                                    <input type="time" id="recurTime" class="form-input" value="12:00">
+                                </div>
+                            </div>
+                            
+                            <div class="datetime-row" id="customIntervalField" style="display: none;">
+                                <div>
+                                    <label class="form-label">Интервал (дней)</label>
+                                    <input type="number" id="recurInterval" class="form-input" value="1" min="1" max="30">
+                                </div>
+                                <div>
+                                    <label class="form-label">Количество постов</label>
+                                    <input type="number" id="recurCount" class="form-input" value="5" min="1" max="50">
+                                </div>
+                            </div>
+                            
+                            <div class="datetime-row" id="standardRecurField">
+                                <div>
+                                    <label class="form-label">Количество постов</label>
+                                    <input type="number" id="recurCountStandard" class="form-input" value="5" min="1" max="50">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="modal-actions">
@@ -1141,6 +1217,9 @@
             uploadedImage = null;
             document.getElementById('publishNow').checked = true; 
             document.getElementById('datetimeFields').style.display = 'none';
+            document.getElementById('recurringFields').style.display = 'none';
+            document.getElementById('customIntervalField').style.display = 'none';
+            document.getElementById('standardRecurField').style.display = 'flex';
 
             if (postId && dayKey && posts[dayKey]) { // Editing
                 const postToEdit = posts[dayKey].find(p => p.id === postId);
@@ -1178,21 +1257,17 @@
                     dateToSet = new Date(year, month, day);
                     document.getElementById('publishScheduled').checked = true; 
                     document.getElementById('datetimeFields').style.display = 'flex';
-                    
-                    // При создании нового поста устанавливаем ограничение на минимальную дату
-                    const today = new Date();
-                    const todayStr = today.toISOString().split('T')[0];
-                    document.getElementById('postDate').setAttribute('min', todayStr);
                 } else { 
                     dateToSet = new Date(); 
                     document.getElementById('publishNow').checked = true; 
                     document.getElementById('datetimeFields').style.display = 'none';
-                    
-                    // При выборе "опубликовать сейчас" тоже ставим ограничение на будущее
-                    const today = new Date();
-                    const todayStr = today.toISOString().split('T')[0];
-                    document.getElementById('postDate').setAttribute('min', todayStr);
                 }
+                
+                // ВСЕГДА устанавливаем минимальную дату как сегодня для новых постов
+                const today = new Date();
+                const todayStr = today.toISOString().split('T')[0];
+                document.getElementById('postDate').setAttribute('min', todayStr);
+                
                 const year = dateToSet.getFullYear();
                 const month = String(dateToSet.getMonth() + 1).padStart(2, '0');
                 const dayOfMonthStr = String(dateToSet.getDate()).padStart(2, '0');
@@ -1212,6 +1287,12 @@
             uploadedImage = null;
             document.getElementById('editingPostId').value = '';
             document.getElementById('editingPostDay').value = '';
+            
+            // Сброс видимости полей
+            document.getElementById('datetimeFields').style.display = 'none';
+            document.getElementById('recurringFields').style.display = 'none';
+            document.getElementById('customIntervalField').style.display = 'none';
+            document.getElementById('standardRecurField').style.display = 'flex';
         }
 
         function openDayPostsModal(dayKey) {
@@ -1286,18 +1367,53 @@
         document.querySelectorAll('input[name="publishTime"]').forEach(radio => {
             radio.addEventListener('change', function() {
                 const datetimeFields = document.getElementById('datetimeFields');
+                const recurringFields = document.getElementById('recurringFields');
                 const postDateInput = document.getElementById('postDate');
+                const recurStartDateInput = document.getElementById('recurStartDate');
                 
-                datetimeFields.style.display = this.value === 'scheduled' ? 'flex' : 'none';
+                // Скрываем все поля
+                datetimeFields.style.display = 'none';
+                recurringFields.style.display = 'none';
                 
-                // Устанавливаем минимальную дату только при создании нового поста
-                if (this.value === 'scheduled' && !document.getElementById('editingPostId').value) {
-                    const today = new Date();
-                    const todayStr = today.toISOString().split('T')[0];
-                    postDateInput.setAttribute('min', todayStr);
-                } else if (document.getElementById('editingPostId').value) {
-                    // При редактировании убираем ограничение
-                    postDateInput.removeAttribute('min');
+                if (this.value === 'scheduled') {
+                    datetimeFields.style.display = 'flex';
+                    
+                    // Если это новый пост, устанавливаем min дату
+                    if (!document.getElementById('editingPostId').value) {
+                        const today = new Date();
+                        const todayStr = today.toISOString().split('T')[0];
+                        postDateInput.setAttribute('min', todayStr);
+                        
+                        if (postDateInput.value && postDateInput.value < todayStr) {
+                            postDateInput.value = todayStr;
+                        }
+                    }
+                } else if (this.value === 'recurring') {
+                    recurringFields.style.display = 'block';
+                    
+                    // Устанавливаем минимальную дату для повторяющихся постов
+                    if (!document.getElementById('editingPostId').value) {
+                        const today = new Date();
+                        const todayStr = today.toISOString().split('T')[0];
+                        recurStartDateInput.setAttribute('min', todayStr);
+                        recurStartDateInput.value = todayStr;
+                    }
+                }
+            });
+        });
+
+        // Обработчик для типа повторения
+        document.querySelectorAll('input[name="recurType"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const customField = document.getElementById('customIntervalField');
+                const standardField = document.getElementById('standardRecurField');
+                
+                if (this.value === 'custom') {
+                    customField.style.display = 'flex';
+                    standardField.style.display = 'none';
+                } else {
+                    customField.style.display = 'none';
+                    standardField.style.display = 'flex';
                 }
             });
         });
@@ -1308,28 +1424,7 @@
 
         function savePost() {
             const text = document.getElementById('postText').value;
-            const isScheduled = document.getElementById('publishScheduled').checked;
-            
-            let date, time;
-            if (isScheduled) {
-                date = document.getElementById('postDate').value;
-                time = document.getElementById('postTime').value;
-                
-                // Проверяем, не пытается ли пользователь сохранить пост на прошедшую дату
-                const selectedDate = new Date(date);
-                const isToday = selectedDate.toDateString() === TODAY.toDateString();
-                const isPastDate = selectedDate < TODAY && !isToday;
-                const editingPostId = document.getElementById('editingPostId').value;
-                
-                if (isPastDate && !editingPostId) {
-                    alert('Нельзя создавать новые посты на прошедшие даты. Выберите сегодняшний день или будущую дату.');
-                    return;
-                }
-            } else {
-                const now = new Date();
-                date = now.toISOString().split('T')[0];
-                time = now.toTimeString().slice(0, 5);
-            }
+            const publishType = document.querySelector('input[name="publishTime"]:checked').value;
             
             const socialNetworks = Array.from(document.querySelectorAll('.social-checkbox:checked')).map(cb => cb.value);
 
@@ -1340,72 +1435,182 @@
 
             const editingPostId = document.getElementById('editingPostId').value;
             const editingPostDayKey = document.getElementById('editingPostDay').value;
-            
-            // Create day key from date
-            const dateObj = new Date(date);
-            const dayKey = `${dateObj.getFullYear()}-${dateObj.getMonth()}-${dateObj.getDate()}`;
 
-            if (editingPostId && editingPostDayKey && posts[editingPostDayKey]) { 
-                const postIndex = posts[editingPostDayKey].findIndex(p => p.id === editingPostId);
-                if (postIndex > -1) {
-                    const originalPost = posts[editingPostDayKey][postIndex];
-                    const updatedPost = {
-                        ...originalPost,
-                        text: text,
-                        image: uploadedImage || originalPost.image, 
-                        date: date,
-                        time: time,
-                        social: socialNetworks,
-                        views: originalPost.views 
-                    };
-
-                    if (dayKey !== editingPostDayKey) {
-                        posts[editingPostDayKey].splice(postIndex, 1); 
-                        if (!posts[editingPostDayKey] || posts[editingPostDayKey].length === 0) {
-                             delete posts[editingPostDayKey]; 
-                        }
-                        updateCalendarDayByKey(editingPostDayKey); 
-
-                        if (!posts[dayKey]) posts[dayKey] = [];
-                        posts[dayKey].push(updatedPost);
+            if (editingPostId && editingPostDayKey && posts[editingPostDayKey]) {
+                // Логика редактирования существующего поста остается прежней
+                editExistingPost(editingPostId, editingPostDayKey, text, socialNetworks, publishType);
+            } else {
+                // Создание нового поста
+                if (publishType === 'now') {
+                    createSinglePost(text, socialNetworks, new Date(), new Date().toTimeString().slice(0, 5));
+                } else if (publishType === 'scheduled') {
+                    const date = document.getElementById('postDate').value;
+                    const time = document.getElementById('postTime').value;
+                    
+                    if (validatePostDate(date)) {
+                        createSinglePost(text, socialNetworks, new Date(date), time);
                     } else {
-                        posts[editingPostDayKey][postIndex] = updatedPost;
+                        return;
                     }
+                } else if (publishType === 'recurring') {
+                    createRecurringPosts(text, socialNetworks);
                 }
-            } else { 
+            }
+            
+            renderRecentPosts(); 
+            renderStatsRecentPosts(); 
+            closePostModal();
+            updateCalendarPosts();
+        }
+
+        function validatePostDate(dateStr) {
+            const selectedDate = new Date(dateStr);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            selectedDate.setHours(0, 0, 0, 0);
+            
+            if (selectedDate < today) {
+                alert('Нельзя создавать новые посты на прошедшие даты. Выберите сегодняшний день или будущую дату.');
+                return false;
+            }
+            return true;
+        }
+
+        function createSinglePost(text, socialNetworks, dateObj, time) {
+            const date = dateObj.toISOString().split('T')[0];
+            const dayKey = `${dateObj.getFullYear()}-${dateObj.getMonth()}-${dateObj.getDate()}`;
+            
+            const newPost = {
+                id: generatePostId(),
+                text: text,
+                image: uploadedImage,
+                date: date,
+                time: time,
+                social: socialNetworks,
+                views: '0' 
+            };
+            
+            if (!posts[dayKey]) {
+                posts[dayKey] = [];
+            }
+            posts[dayKey].push(newPost);
+            updateCalendarDayByKey(dayKey);
+        }
+
+        function createRecurringPosts(text, socialNetworks) {
+            const startDate = new Date(document.getElementById('recurStartDate').value);
+            const time = document.getElementById('recurTime').value;
+            const recurType = document.querySelector('input[name="recurType"]:checked').value;
+            
+            let interval = 1; // дней
+            let count = parseInt(document.getElementById('recurCountStandard').value);
+            
+            if (recurType === 'daily') {
+                interval = 1;
+            } else if (recurType === 'weekly') {
+                interval = 7;
+            } else if (recurType === 'custom') {
+                interval = parseInt(document.getElementById('recurInterval').value);
+                count = parseInt(document.getElementById('recurCount').value);
+            }
+
+            // Проверяем стартовую дату
+            if (!validatePostDate(document.getElementById('recurStartDate').value)) {
+                return;
+            }
+
+            let createdCount = 0;
+            const maxPosts = Math.min(count, 50); // Ограничиваем максимум 50 постами
+
+            for (let i = 0; i < maxPosts; i++) {
+                const postDate = new Date(startDate);
+                postDate.setDate(startDate.getDate() + (i * interval));
+                
+                // Создаем пост с уникальным ID
+                const dayKey = `${postDate.getFullYear()}-${postDate.getMonth()}-${postDate.getDate()}`;
                 const newPost = {
                     id: generatePostId(),
-                    text: text,
+                    text: `${text} ${i > 0 ? `(#${i + 1})` : ''}`,
                     image: uploadedImage,
-                    date: date,
+                    date: postDate.toISOString().split('T')[0],
                     time: time,
-                    social: socialNetworks,
-                    views: '0' 
+                    social: [...socialNetworks],
+                    views: '0',
+                    isRecurring: true,
+                    recurringGroup: `group_${Date.now()}`
                 };
+                
                 if (!posts[dayKey]) {
                     posts[dayKey] = [];
                 }
                 posts[dayKey].push(newPost);
+                updateCalendarDayByKey(dayKey);
+                createdCount++;
             }
-            
-            updateCalendarDayByKey(dayKey);
-            if (editingPostDayKey && dayKey !== editingPostDayKey) {
-                updateCalendarDayByKey(editingPostDayKey); 
-            }
-            renderRecentPosts(); 
-            renderStatsRecentPosts(); 
-            closePostModal();
-            
-            // Update day posts modal if it's open
-            if (document.getElementById('dayPostsModal').classList.contains('active')) {
-                const activeDayText = document.getElementById('dayPostsModalTitle').textContent;
-                const activeDayMatch = activeDayText.match(/(\d+)\s+\w+/); 
-                if (activeDayMatch && activeDayMatch[1]) {
-                    const activeDay = parseInt(activeDayMatch[1]);
-                    // Find the dayKey that matches this day in current month/year
-                    const activeDayKey = `${currentDisplayYear}-${currentDisplayMonth}-${activeDay}`;
-                    if(activeDayKey === dayKey || (editingPostDayKey && activeDayKey === editingPostDayKey) ){
-                        updateDayPostsModal(activeDayKey);
+
+            alert(`Создано ${createdCount} повторяющихся публикаций!`);
+        }
+
+        function editExistingPost(editingPostId, editingPostDayKey, text, socialNetworks, publishType) {
+            const postIndex = posts[editingPostDayKey].findIndex(p => p.id === editingPostId);
+            if (postIndex > -1) {
+                const originalPost = posts[editingPostDayKey][postIndex];
+                
+                let date, time;
+                if (publishType === 'now') {
+                    const now = new Date();
+                    date = now.toISOString().split('T')[0];
+                    time = now.toTimeString().slice(0, 5);
+                } else if (publishType === 'scheduled') {
+                    date = document.getElementById('postDate').value;
+                    time = document.getElementById('postTime').value;
+                } else {
+                    // Для повторяющихся постов при редактировании используем текущие значения
+                    date = originalPost.date;
+                    time = originalPost.time;
+                }
+                
+                const dateObj = new Date(date);
+                const dayKey = `${dateObj.getFullYear()}-${dateObj.getMonth()}-${dateObj.getDate()}`;
+                
+                const updatedPost = {
+                    ...originalPost,
+                    text: text,
+                    image: uploadedImage || originalPost.image, 
+                    date: date,
+                    time: time,
+                    social: socialNetworks,
+                    views: originalPost.views 
+                };
+
+                if (dayKey !== editingPostDayKey) {
+                    posts[editingPostDayKey].splice(postIndex, 1); 
+                    if (!posts[editingPostDayKey] || posts[editingPostDayKey].length === 0) {
+                         delete posts[editingPostDayKey]; 
+                    }
+                    updateCalendarDayByKey(editingPostDayKey); 
+
+                    if (!posts[dayKey]) posts[dayKey] = [];
+                    posts[dayKey].push(updatedPost);
+                } else {
+                    posts[editingPostDayKey][postIndex] = updatedPost;
+                }
+                
+                updateCalendarDayByKey(dayKey);
+                if (dayKey !== editingPostDayKey) {
+                    updateCalendarDayByKey(editingPostDayKey); 
+                }
+
+                // Update day posts modal if it's open
+                if (document.getElementById('dayPostsModal').classList.contains('active')) {
+                    const activeDayText = document.getElementById('dayPostsModalTitle').textContent;
+                    const activeDayMatch = activeDayText.match(/(\d+)\s+\w+/); 
+                    if (activeDayMatch && activeDayMatch[1]) {
+                        const activeDay = parseInt(activeDayMatch[1]);
+                        const activeDayKey = `${currentDisplayYear}-${currentDisplayMonth}-${activeDay}`;
+                        if(activeDayKey === dayKey || activeDayKey === editingPostDayKey){
+                            updateDayPostsModal(activeDayKey);
+                        }
                     }
                 }
             }
@@ -1490,12 +1695,16 @@
             const views = postData.views !== undefined ? postData.views : '0'; 
             const statsHtml = !inModal ? `<div class="post-stats"><span>👁 ${views}</span></div>` : '';
             
+            // Добавляем индикатор повторяющегося поста
+            const recurringIndicator = postData.isRecurring ? '<span style="color: var(--warning); font-size: 12px;">🔄 Серия</span>' : '';
+            
             postItem.innerHTML = `
                 ${imageHtml}
                 <div class="post-content">
                     <p class="post-text">${postData.text || ''}</p>
                     <div class="post-meta">
                         <span class="post-date">${formattedDate} • ${postData.time || ''}</span>
+                        ${recurringIndicator}
                         <div class="post-socials">
                             ${socialHtml}
                         </div>
@@ -1752,6 +1961,25 @@
                         if (this.id === 'dayPostsModal') closeDayPostsModal();
                     }
                 });
+            });
+
+            // Инициализация обработчиков для повторяющихся публикаций
+            document.querySelectorAll('input[name="recurType"]').forEach(radio => {
+                if (!radio.hasAttribute('data-handler-added')) {
+                    radio.addEventListener('change', function() {
+                        const customField = document.getElementById('customIntervalField');
+                        const standardField = document.getElementById('standardRecurField');
+                        
+                        if (this.value === 'custom') {
+                            customField.style.display = 'flex';
+                            standardField.style.display = 'none';
+                        } else {
+                            customField.style.display = 'none';
+                            standardField.style.display = 'flex';
+                        }
+                    });
+                    radio.setAttribute('data-handler-added', 'true');
+                }
             });
 
             // Remove hover effects on touch devices after click
